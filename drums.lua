@@ -49,12 +49,12 @@ end
 function key(k, z)
   if z == 0 then return end
   print(k, z, "???")
-  song.is_screen_dirty = true
+  screen_dirty = true
 end
 
 function enc(e, d)
   print(e, d, "???")
-  song.is_screen_dirty = true
+  screen_dirty = true
 end
 
 function cleanup()
