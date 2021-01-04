@@ -143,6 +143,11 @@ The dominant aesthetic transformational processes of the future, which could be 
 
 They may, however, first be begin to be described in the aesthetic languages of technologies we now know.
 
-
 Laurie Spiegel
 New York, 1981
+
+## changelog
+
+- @tyleretters - init project
+- @tyleretters - start of a step sequencer
+- @Quixotic7- added gridStep for playing drums sounds with grid. 
