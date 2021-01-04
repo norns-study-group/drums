@@ -151,3 +151,4 @@ New York, 1981
 - @tyleretters - init project
 - @tyleretters - start of a step sequencer
 - @Quixotic7- added gridStep for playing drums sounds with grid. 
+- @ryanlaws - Add synth socket from dronecaster 
