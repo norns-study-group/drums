@@ -7,6 +7,13 @@ fn = include("lib/functions")
 graphics = include("lib/graphics")
 Track = include("lib/track")
 Lattice = include("lib/lattice")
+GridKeys = include("lib/gridkeys")
+
+local TRACK_COUNT = 7
+
+local g = grid.connect()
+local gridKeys = {}
+local grid_dirty = false
 
 function init()
   graphics.init()
@@ -22,15 +29,21 @@ function init()
     end
   }
   lattice:start()
+
   tracks = {}
-  for i = 1, 7 do
+  for i = 1, TRACK_COUNT do
     local track = Track:new()
     track:set_pattern(fn.make_random_pattern())
     tracks[i] = track
   end
   tracks[1]:select()
+
+  init_gridKeys()
+
   graphics_clock_id = clock.run(graphics_loop)
 end
+
+
 
 function do_drum_thing()
   print("do drum thing")
@@ -55,6 +68,11 @@ function graphics_loop()
     if screen_dirty then
       redraw()
       screen_dirty = false
+    end
+
+    -- animates gridKeys and redraws grid if dirty
+    if gridKeys:animate() or grid_dirty then
+      grid_redraw()
     end
   end
 end
@@ -82,3 +100,72 @@ function cleanup()
   lattice:destroy()
   clock.cancel(graphics_clock_id)
 end
+
+-- GRID --
+function init_gridKeys()
+  -- setup gridkeys to play drums with grid
+  gridKeys = GridKeys.new(16,8)
+  gridKeys.vertical_offset = 0
+  gridKeys.sound_mode = 3 -- kit mode
+  gridKeys.layout_mode = 3 -- kit layout
+  gridKeys.note_on = grid_note_on
+  gridKeys.note_off = grid_note_off
+  gridKeys.key_pushed = grid_key_pushed
+
+  for i = 1, TRACK_COUNT do
+    gridKeys.kit_has_sample[i] = 1
+  end
+
+  grid_dirty = true
+end
+
+g.key = function(x,y,z)
+  grid_dirty = false
+  
+  grid_dirty = gridKeys:grid_key(x,y,z)
+
+  if grid_dirty then
+      grid_redraw()
+  end
+end
+
+function grid_redraw()
+  g:all(0)
+
+  gridKeys:draw_grid(g)
+
+  g:refresh()
+end
+
+function grid_note_on(gKeys, noteNum, vel)
+  vel = vel or 100 
+
+  if gKeys.sound_mode == 1 then -- play internal note, could be used to play drum track chromatically or in-scale
+  elseif gKeys.sound_mode == 2 then -- midi out
+  elseif gKeys.sound_mode == 3 then -- internal kit
+    local track_id = noteNum + 1
+
+    local noteInScale = gKeys:is_note_in_scale(noteNum)
+
+    print("Play Drum "..track_id.." In scale: "..(noteInScale and "true" or "false"))
+  end
+end
+
+function grid_note_off(gKeys, noteNum)
+  print("Note Off: " .. noteNum)
+
+  if gKeys.sound_mode == 1 then
+  elseif gKeys.sound_mode == 2 then
+  elseif gKeys.sound_mode == 3 then -- internal kit
+  end
+end
+
+function grid_key_pushed(gKeys, noteNum, vel)
+  if gKeys.sound_mode == 3 then -- internal kit
+      -- print("Change selected drum: "..noteNum)
+      local track_id = noteNum + 1
+
+      fn.select_track_by_id(track_id)
+  end
+end
+-- END GRID --
