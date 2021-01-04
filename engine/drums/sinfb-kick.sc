@@ -10,7 +10,9 @@
 	controls: (
 		decay: ControlSpec(0.05, 2, \exp, default: 0.5),
 		curve: ControlSpec(-20, 20, \lin, default: -4),
-		hz: ControlSpec(20, 320, \exp, default: 35)
+		hz: ControlSpec(20, 320, \exp, default: 35),
+		// I don't think most synths need attack, just adding as an example
+		attack: ControlSpec(0.0, 0.1, \exp, default: 0.0),
 		// vel should always be 0.0-1.0
 	)
 )
