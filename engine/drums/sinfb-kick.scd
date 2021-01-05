@@ -8,11 +8,11 @@
 		(env ** 10 * 5 + 1 * osc).tanh;
 	},
 	controls: (
-		decay: ControlSpec(0.05, 2, \exp, default: 0.5, "seconds"),
-		curve: ControlSpec(-20, 20, \lin, default: -4, "exponent"),
-		hz: ControlSpec(20, 320, \exp, default: 35, "hz"),
+		decay: ControlSpec(0.05, 2, \exp, 0, 0.5, "seconds"),
+		curve: ControlSpec(-20, 20, \lin, 0, -4, "exponent"),
+		hz: ControlSpec(20, 320, \exp, 0, 35, "hz"),
 		// I don't think most synths need attack, just adding as an example
-		attack: ControlSpec(0.0, 0.1, \exp, default: 0.0, "seconds"),
+		attack: ControlSpec(0.0, 0.1, \exp, 0, 0.0, "seconds"),
 		// vel should always be 0.0-1.0
 	)
 )
