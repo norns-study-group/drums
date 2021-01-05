@@ -3,9 +3,9 @@
 	synth: {
 		arg env=0, hz, vel;
 		var fbScale = (1 - vel) ** 0.2 * 500;
-		var freq = kikEnv ** 5 * 7 + 1 * hz;
-		var osc = SinOscFB.ar(freq, kikEnv ** fbScale * (vel ** 0.6) * 50);
-		(kikEnv ** 10 * 5 + 1 * osc).tanh;
+		var freq = env ** 5 * 7 + 1 * hz;
+		var osc = SinOscFB.ar(freq, env ** fbScale * (vel ** 0.6) * 50);
+		(env ** 10 * 5 + 1 * osc).tanh;
 	},
 	controls: (
 		decay: ControlSpec(0.05, 2, \exp, default: 0.5),
