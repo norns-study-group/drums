@@ -43,17 +43,17 @@ Drums {
 			/* TODO: 
 			- fade & reload any sockets w/ new defs (need to track name)
 			*/
-			var drum = drums[name];
+			var name = e.fileNameWithoutExtension;
 			var touchedTime = File.mtime(e.fullPath);
-			var drumExists = drum.isNil.not && ;
+
+			var drum = drums[name];
 			if (drum.isNil.not, {
 				var dTouched = drum[\touched];
-				if(dTouched.isNil.not && dTouched != touchedTime), {
-					var name = e.fileNameWithoutExtension;
+				if(dTouched.isNil.not && dTouched != touchedTime, {
 					drums[name] = e.fullPath.load;
 					drums[name][\touched] = touchedTime;
-				}
-			})
+				});
+			});
 		});
 		drums.postln;
 	}
@@ -68,10 +68,9 @@ Drums {
 		});
 	}
 
-	setParam({
-		arg index, param, value;
+	setParam { arg index, param, value;
 		socket[index].setControl(param.asSymbol, value);
-	});
+	}
 
 	/*setAmp { |index,  arg value;
 		amp = value;
@@ -120,9 +119,9 @@ Engine_Drums : CroneEngine {
 
 		this.addCommand("pick_synth", "is", { arg msg;
 			var index = msg[1];
-			var synth = msg[2];
-			drums.start(index, name);
-		})
+			var synthName = msg[2];
+			drums.start(index, synthName);
+		});
 
 		this.addCommand("set_param", "isf", { arg msg;
 			var index = msg[1];
@@ -130,14 +129,14 @@ Engine_Drums : CroneEngine {
 			var value = msg[3];
 			// if param is attack or decay, need to set on env
 			// not sure whether to do here or elsewhere
-			drums.socket[index].setFadeTime(fadeTime);
+			drums.socket[index].controlLag[param].set(\value, value);
 		});
 
 		this.addCommand("set_param_lag", "isf", { arg msg;
 			var index = msg[1];
 			var param = msg[2];
-			var lag = msg[3];
-			drums.socket[index].setFadeTime(fadeTime);
+			var time = msg[3];
+			drums.socket[index].controlLag[param].set(\time, time);
 		});
 
 		this.addCommand("trigger", "i", { arg msg;
