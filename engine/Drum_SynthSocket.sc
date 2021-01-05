@@ -1,4 +1,7 @@
 /* TODO:
+- FIX THE BROKEN TRIGGER. I completely don't get it.
+- might need to ditch fade. idk if it's messing things up.
+
 - Make a mixer - this thing's gonna clip
 - Add another out for the sidechain
 - Make a mix bus for sidechaining
@@ -44,6 +47,7 @@ Drum_SynthSocket {
 	// do these need the <> ? idfk
 	var testSynth;
 	var testEnv;
+	var envTrigBus;
 	var envBus;
 	var baseControls;
 
@@ -82,12 +86,13 @@ Drum_SynthSocket {
 		inBus = Array.fill(2, { Bus.audio(s, 2) });
 
 		"setting up bus".postln;
-		envBus = Bus.control(server);
+		envTrigBus = Bus.control(server, 1);
+		envBus = Bus.control(server, 1);
 
 		envParams = [\attack, \decay, \curve];
 
 		baseControls = (
-			decay: ControlSpec(0.05, 1, \exp, 0, 0.5, "seconds"),
+			decay: ControlSpec(0.05, 5, \exp, 0, 2, "seconds"),
 			curve: ControlSpec(-10, 10, \lin, 0, -4, "exponent"),
 			hz: ControlSpec(8.18, 13289.75, \exp, 0, 220, "hz"),
 			attack: ControlSpec(0.001, 1, \exp, 0, 0.01, "seconds"),
@@ -97,8 +102,6 @@ Drum_SynthSocket {
 		testSynth = { arg out, env=0;
 			Out.ar(out, SinOsc.ar(env * 200 + 110 + 20.0.rand) / 6) 
 		}.play(target:group, args: [\out, out]);
-		"mapping env bus to test synth".postln;
-		testSynth.map(\env, envBus.index);
 
 		"setting up fade synth".postln;
 		fadeSynth = Array.fill(2, { arg i;
@@ -119,18 +122,43 @@ Drum_SynthSocket {
 
 		"setting up env synth".postln;
 		// Don't need a new one for each drum. Just reuse forever
-		env = { arg bus, attack, decay, curve, t_trig=0;
-			var envSpec, env;
+		// This trigBus thing is really dumb. Maybe there's a less crappy way to do this.
+		// Worst-case, could utilize the velocity bus. I forgot to add that anyway :)
+		env = { arg bus, attack=0, decay=0.5, curve=(-4), hz=0.3, velocity, t_trig=1;
+			var envSpec, e, trig;
+			// trig = InTrig.kr(velocity);
 			envSpec = Env.perc(attack, decay, curve);
-			env = EnvGen.kr(envSpec, t_trig)
+			// e = EnvGen.kr(envSpec, Impulse.kr(2))
+			e = EnvGen.kr(envSpec, t_trig)
 			// .poll(10)
 			;
-			Out.kr(bus, env);
-		}.play(target:group, args: [\bus, envBus]);
+			// this is just a dumb thing for testing
+			// e = e + SinOsc.kr(hz, 0, 0.1).abs
+			// .poll(10)
+			// ;
+			Out.kr(bus, e);
+		}.play(target:group, args: [\bus, envBus, \velocity, envTrigBus]); // velocity should be mapped elsewhere!
 
-		controls = baseControls;
 		"setting up controls ".postln;
+		controls = baseControls;
 		this.setupControls;
+		"mapping stuff.".postln;
+		this.mapStuff;
+	}
+
+	mapStuff {
+		Routine {
+			server.sync;
+			"in mapStuff. going to sync with server.".postln;
+			"in mapStuff. synced with server. now to map.".postln;
+			testSynth.map(\env, envBus.index);
+			"mapped env to test sytnh. now mapping env controls".postln;
+			envParams.do({ arg key;
+				env.map(key, controlBus[key]);
+			});
+			"mapped env controls".postln;
+			"in mapStuff. mapped stuff.".postln;
+		}.play;
 	}
 
 	setupControls {
@@ -163,12 +191,8 @@ Drum_SynthSocket {
 
 			// server.sync;
 
-			"set controls values; setting env controls".postln;
+			"set controls values".postln; 
 
-			envParams.do({ arg key;
-				env.map(key, controlBus[key]);
-			});
-			"set env values".postln;
 		// }.play;
 	}
 
@@ -188,6 +212,10 @@ Drum_SynthSocket {
 	trig {
 		// "triggering in socket".postln;
 		env.set(\t_trig, 1);
+		env.set(\t_trig, 0);
+		// env.set(\trig, 1);
+		// env.set(\hz, 5.0.rand);
+		// envTrigBus.set(1);
 	}
 
 	setControl { arg key, value;
@@ -208,7 +236,6 @@ Drum_SynthSocket {
 		group.free;
 		inBus.do({ arg bus; bus.free; });
 		controlBus.do({ arg bus; bus.free; });
-		envBus.free;
 	}
 
 	//////////////////////////////////////////
@@ -257,7 +284,7 @@ Drum_SynthSocket {
 				("mapping env param" ++ param).postln;
 				env.map(param, controlBus[param]);
 			});
-			source.map(\env, envBus);
+			source.map(\env, envBus.index);
 
 			// TODO: set defaults... maybe?
 

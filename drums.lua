@@ -9,6 +9,8 @@ Track = include("lib/track")
 Lattice = include("lib/lattice")
 GridKeys = include("lib/gridkeys")
 
+engine.name = "Drums"
+
 local TRACK_COUNT = 7
 
 local g = grid.connect()
@@ -41,12 +43,16 @@ function init()
   init_gridKeys()
 
   graphics_clock_id = clock.run(graphics_loop)
+  
+--   engine.pick_synth(0, "sinfb-kick")
 end
 
 
 
 function do_drum_thing()
-  print("do drum thing")
+--   print("do drum thing")
+--   engine.pick_synth(0, "sinfb-kick")
+  engine.trigger(0)
 end
 
 function increment_measure()
