@@ -30,18 +30,10 @@ Drums {
 		this.scanForNewDrums(baseDrumPath);
 
 
-		// I'm gonna turn this down for debugging
-		// socket = 8.collect{ 
-		socket = 1.collect{ 
-			// Drum_SynthSocket.new(server, 0, [\amp, \hz, \decay, \wild]) 
-			// The out (2nd) param seems to be where you put a "mixer" bus
-			// If stuff only plays thru left channel, probably need e.g. pan or !2
+		socket = 8.collect{ 
 			Drum_SynthSocket.new(server, 0) 
 		};
 
-		// recordBus = Bus.audio(server, 2);
-		// inJacks = { Out.ar(recordBus, SoundIn.ar([0, 1])) }.play;
-		// recorder = Recorder.new(server);
 	}
 
 	scanForNewDrums { arg baseDrumPath;
@@ -89,37 +81,21 @@ Drums {
 
 	setParam { arg index, param, value;
 		("setting drum #"++index++" param "++param++"to "++value);
-		// socket[index].controlLag[param].set(\value, value);
-		socket[index].setControl(param, value);
+		socket[index].setParam(param, value);
 	}
 
-	setParamLag { arg index, param, time;
-		("setting drum #"++index++" param lag "++param++"to "++time);
-		socket[index].setControlLag(param, time);
-		// drums.socket[index].controlLag[param].set(\time, time);
+	setOneParamLag { arg index, param, time;
+		("setting drum #"++index++" param "++param++" lag to "++time);
+		socket[index].setOneParamLag(param, time);
 	}
 
-	/*setAmp { |index,  arg value;
-		amp = value;
-		socket.setControl(\amp, amp);
+	setAllParamLag { arg index, time;
+		("setting drum #"++index++" all param lag to "++time);
+		socket[index].setAllParamLag(time);
 	}
 
-	setHz { arg value;
-		hz = value;
-		socket.setControl(\hz, hz);
-	}*/
-
-	/*stop {
-		socket.stop;
-	}
-
-	record { arg path;
-		recorder.record(path.asString, recordBus, 2);
-	}*/
 
 	free {
-		// inJacks.free;
-		// recorder.free;
 		socket.do{|s| s.free };
 	}
 }
@@ -160,11 +136,17 @@ Engine_Drums : CroneEngine {
 			drums.setParam(index, param, value);
 		});
 
-		this.addCommand("set_param_lag", "isf", { arg msg;
+		this.addCommand("set_all_param_lag", "sf", { arg msg;
+			var param = msg[1];
+			var time = msg[2];
+			drums.setAllParamLag(param, time);
+		});
+
+		this.addCommand("set_one_param_lag", "isf", { arg msg;
 			var index = msg[1];
 			var param = msg[2];
 			var time = msg[3];
-			drums.setParamLag(index, param, time);
+			drums.setOneParamLag(index, param, time);
 		});
 
 		this.addCommand("trigger", "i", { arg msg;
@@ -174,16 +156,7 @@ Engine_Drums : CroneEngine {
 
 			("triggering drum #"++index);
 			drums.socket[index].trig;
-			// drums.socket[index].setFadeTime(fadeTime);
 		});
-
-		/*this.addCommand("hz", "f", { arg msg;
-			drums.setHz(msg[1].asFloat);
-		});
-
-		this.addCommand("amp", "f", { arg msg;
-			drums.setAmp(msg[1].asFloat);
-		});*/
 
 		this.addCommand("set_fadetime", "if", { arg msg;
 			var index = msg[1];
@@ -191,21 +164,6 @@ Engine_Drums : CroneEngine {
 			drums.socket[index].setFadeTime(fadeTime);
 		});
 
-		/*this.addCommand("stop", "i", { arg msg;
-			drums.stop(msg[1]);
-		});
-
-		this.addCommand("start", "s", { arg msg;
-			drums.start(msg[1].asString);
-		});
-
-		this.addCommand("record_start", "s", { arg msg;
-			drums.record(msg[1]);
-		});
-
-		this.addCommand("record_stop", "i", { arg msg;
-			drums.recorder.stopRecording;
-		});*/
 	}
 
 	free {

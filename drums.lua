@@ -44,15 +44,17 @@ function init()
 
   graphics_clock_id = clock.run(graphics_loop)
   
---   engine.pick_synth(0, "sinfb-kick")
+-- this is pretty silly. probably attach to some menu thing or something
+  engine.pick_synth(0, "ez")
+  -- engine.pick_synth(0, "sinfb-kick")
 end
 
 
 
 function do_drum_thing()
---   print("do drum thing")
---   engine.pick_synth(0, "sinfb-kick")
+-- this is also pretty silly. probably attach to some sequncer or something
   engine.trigger(0)
+  print("do drum thing")
 end
 
 function increment_measure()
