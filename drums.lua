@@ -24,7 +24,7 @@ function init()
   measure = 0
   lattice = Lattice:new()
   whole_notes = lattice:new_pattern{
-    division = 1,
+    division = 0.05,
     callback = function(t)
       increment_measure()
       do_drum_thing()
@@ -45,20 +45,46 @@ function init()
   graphics_clock_id = clock.run(graphics_loop)
   
 -- this is pretty silly. probably attach to some menu thing or something
---   engine.pick_synth(0, "ez")
+  -- engine.pick_synth(0, "ez")
 --   engine.pick_synth(0, "sinfb-kick")
-  engine.pick_synth(0, "trig-test")
+  -- engine.pick_synth(0, "trig-test")
 --   engine.map_param(0, "vel", (1 + math.random()) / 2)
+  engine.pick_synth(0, "whip-snare")
+  engine.pick_synth(1, "sinfb-kick")
+  engine.pick_synth(2, "noisehat")
 end
 
 
 
 function do_drum_thing()
 -- this is also pretty silly. probably attach to some sequncer or something
-  engine.map_param(0, "pan", math.random())
-  engine.map_param(0, "slap", math.random())
-  engine.map_param(0, "vel", (1 + math.random()) / 2)
-  engine.trigger(0)
+  
+
+  if math.random() > 0.5 then
+      if math.random() > 0.6 then
+        engine.map_param(1, "pan", util.linlin(0,1,-1,1,math.random()))
+        engine.map_param(1, "decay", util.linlin(0,1,0.3,1.0,math.random()))
+        engine.map_param(1, "vel", (1 + math.random()) / 2)
+
+        engine.trigger(1)
+        -- engine.pick_synth(0, "whip-snare")
+      elseif math.random() > 0.2 then
+        engine.trigger(2)
+      else
+        engine.map_param(0, "pan", util.linlin(0,1,-1,1,math.random()))
+      -- engine.map_param(0, "slap", util.linlin(0,1,0.5,4,math.random()))
+      -- engine.map_param(0, "slap", 5)
+
+        engine.map_param(0, "decay", util.linlin(0,1,0.05,0.3,math.random()))
+        engine.map_param(0, "heft", util.linlin(0,1,0.8,2,math.random()))
+        engine.map_param(0, "vel", (1 + math.random()) / 2)
+
+        engine.trigger(0)
+        -- engine.pick_synth(0, "sinfb-kick")
+      end
+  end
+
+  -- engine.trigger(0)
 --   print("do drum thing")
 end
 
