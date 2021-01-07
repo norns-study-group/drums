@@ -56,6 +56,7 @@ end
 function do_drum_thing()
 -- this is also pretty silly. probably attach to some sequncer or something
   engine.map_param(0, "pan", math.random())
+  engine.map_param(0, "slap", math.random())
   engine.map_param(0, "vel", (1 + math.random()) / 2)
   engine.trigger(0)
 --   print("do drum thing")

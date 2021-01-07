@@ -58,6 +58,8 @@ Drum_SynthSocket {
 			hz: ControlSpec(8.18, 13289.75, \exp, 0, 220, "hz"),
 			attack: ControlSpec(0.001, 1, \exp, 0, 0.01, "seconds"),
 			vel: ControlSpec(0, 1, \lin, 0, 1, "velocitudes"),
+			slap: ControlSpec(0, 1, \lin, 0, 1, "slap"),
+			heft: ControlSpec(0, 1, \lin, 0, 1, "heft"),
 		);
 
 		// "setting up env synth".postln;
