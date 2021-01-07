@@ -1,4 +1,3 @@
-// "kernel" class, norns-agnostic
 /* TODO: 
 	- change monolothic drone code to kit (8 drums?)
 	- create drum .sc/.scd format declaring synth as well as param ranges (min/max/default)
@@ -27,8 +26,8 @@ Drums {
 			drums = Dictionary.new;
 		});
 
+		// This could be called later on to "refresh"
 		this.scanForNewDrums(baseDrumPath);
-
 
 		socket = 8.collect{ 
 			Drum_SynthSocket.new(server, 0) 
@@ -47,20 +46,28 @@ Drums {
 
 			var drum = drums[name];
 			("preparing drum " ++ name).postln;
-			if (drum.isNil.not, {
-				var dTouched = drum[\touched];
-				("checking for updated drum " ++ name).postln;
-				if(dTouched.isNil.not && dTouched < touchedTime, {
-					("found updated drum " ++ name ++ ". updating...").postln;
+			try {
+				if (drum.isNil.not, {
+					var dTouched = drum[\touched];
+					("checking for updated drum " ++ name).postln;
+					// This has to be nested because SC doesn't bail
+					// on false left operand for && 
+					// (probably so it works with audio)
+					if(dTouched.isNil.not && dTouched < touchedTime, {
+						("found updated drum " ++ name ++ ". updating...").postln;
+						drums[name] = e.fullPath.load;
+						drums[name][\touched] = touchedTime;
+					});
+				}, {
+					("adding brand new drum " ++ name).postln;
 					drums[name] = e.fullPath.load;
 					drums[name][\touched] = touchedTime;
 				});
-			}, {
-				("adding brand new drum " ++ name).postln;
-				drums[name] = e.fullPath.load;
-				drums[name][\touched] = touchedTime;
-			});
-			("done preparing " ++ name ++ ".").postln;
+				("done preparing " ++ name ++ ".").postln;
+			} { arg error;
+				("error loading drum " ++ name ++ ":").postln;
+				error.postln;
+			}
 		});
 		drums.postln;
 	}
@@ -80,20 +87,30 @@ Drums {
 	}
 
 	setParam { arg index, param, value;
-		("setting drum #"++index++" param "++param++"to "++value);
+		("setting drum #"++index++" param "++param++"to "++value).postln;
 		socket[index].setParam(param, value);
 	}
 
+	randomizeParam { arg index, param;
+		("randomizing drum #"++index++" param "++param).postln;
+		socket[index].randomizeParam(param);
+	}
+
+	mapParam { arg index, param, value;
+		value = value.max(0).min(1);
+		// ("mapping drum #"++index++" param "++param++" value " ++ value ++ "to range").postln;
+		socket[index].mapParam(param, value);
+	}
+
 	setOneParamLag { arg index, param, time;
-		("setting drum #"++index++" param "++param++" lag to "++time);
+		("setting drum #"++index++" param "++param++" lag to "++time).postln;
 		socket[index].setOneParamLag(param, time);
 	}
 
 	setAllParamLag { arg index, time;
-		("setting drum #"++index++" all param lag to "++time);
+		("setting drum #"++index++" all param lag to "++time).postln;
 		socket[index].setAllParamLag(time);
 	}
-
 
 	free {
 		socket.do{|s| s.free };
@@ -131,9 +148,20 @@ Engine_Drums : CroneEngine {
 			var index = msg[1];
 			var param = msg[2];
 			var value = msg[3];
-			// if param is attack or decay, need to set on env
-			// not sure whether to do here or elsewhere
 			drums.setParam(index, param, value);
+		});
+
+		this.addCommand("randomize_param", "is", { arg msg;
+			var index = msg[1];
+			var param = msg[2];
+			drums.randomizeParam(index, param);
+		});
+
+		this.addCommand("map_param", "isf", { arg msg;
+			var index = msg[1];
+			var param = msg[2];
+			var value = msg[3];
+			drums.mapParam(index, param, value);
 		});
 
 		this.addCommand("set_all_param_lag", "sf", { arg msg;
@@ -151,9 +179,6 @@ Engine_Drums : CroneEngine {
 
 		this.addCommand("trigger", "i", { arg msg;
 			var index = msg[1];
-			// this is where the env should get triggered
-			// not sure whether to do here or elsewhere
-
 			("triggering drum #"++index);
 			drums.socket[index].trig;
 		});
@@ -163,7 +188,6 @@ Engine_Drums : CroneEngine {
 			var fadeTime = msg[2].asFloat;
 			drums.socket[index].setFadeTime(fadeTime);
 		});
-
 	}
 
 	free {

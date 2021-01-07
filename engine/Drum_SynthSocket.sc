@@ -57,39 +57,35 @@ Drum_SynthSocket {
 			curve: ControlSpec(-10, 10, \lin, 0, -4, "exponent"),
 			hz: ControlSpec(8.18, 13289.75, \exp, 0, 220, "hz"),
 			attack: ControlSpec(0.001, 1, \exp, 0, 0.01, "seconds"),
+			vel: ControlSpec(0, 1, \lin, 0, 1, "velocitudes"),
 		);
 
-		"setting up env synth".postln;
-		// Don't need a new one for each drum. Just reuse forever
-		// This trigBus thing is really dumb. Maybe there's a less crappy way to do this.
-		// Worst-case, could utilize the velocity bus. I forgot to add that anyway :)
-		synthProxy[\env] = { arg bus, attack=0, decay=0.5, curve=(-4), t_trig=0;
-			var envSpec = Env.perc(attack, decay, 1, curve: curve);
+		// "setting up env synth".postln;
+		synthProxy[\env] = { arg bus, attack=0, decay=0.5, curve=(-4), vel, t_trig=0;
+			var envSpec = Env.perc(attack, decay, vel.max(0).min(1), curve: curve);
 			EnvGen.kr(envSpec, t_trig);
 		};
 
-
-		"setting up dummy drum (a.k.a. drummy)".postln;
+		// "setting up dummy drum (a.k.a. drummy)".postln;
 		synthProxy[\drum] = { WhiteNoise.ar(0.0001) };
 
-		"setting up pan synth".postln;
+		// "setting up pan synth".postln;
 		synthProxy[\pan] = {
 			Pan2.ar(synthProxy[\drum], paramProxy[\pan]);
 		};
 		synthProxy[\pan].play(out);
 
-		"setting up controls ".postln;
+		// "setting up controls ".postln;
 		controlSpecs = baseControls;
 		this.setupControls;
-		"mapping stuff.".postln;
+		// "mapping stuff.".postln;
 		this.mapStuff;
 	}
 
 	mapStuff {
 		Routine {
 			server.sync;
-			"in mapStuff. going to sync with server.".postln;
-			"in mapStuff. synced with server. now to map.".postln;
+			// "in mapStuff. synced with server. now to map.".postln;
 
 			// couldn't get these to work so I'm hard-coding it. whatever.
 			// synthProxy[\pan] <<>.in synthProxy[\drum]; 
@@ -99,26 +95,27 @@ Drum_SynthSocket {
 			controlSpecs.keys.do({ arg key;
 				synthProxy[\env].map(key, paramProxy[key]);
 			});
-			"mapped env to sytnh. now mapping env controls".postln;
+			// "mapped env to sytnh. now mapping env controls".postln;
 			envParams.do({ arg param;
 				synthProxy[\env].map(param, paramProxy[param]);
 			});
-			"mapped env controls".postln;
-			"in mapStuff. mapped stuff.".postln;
+			// "mapped env controls".postln;
+			// "mapped stuff.".postln;
 		}.play;
 	}
 
 	setupControls {
-		"freeing params".postln;
+		// "freeing params".postln;
 		paramProxy.free;
-		"maybe freed params".postln;
+		// "maybe freed params".postln;
 
 		controlSpecs.keys.do({ arg key;
-			("setting "++key++" to "++controlSpecs[key].default).postln;
+			// ("setting "++key++" to "++controlSpecs[key].default).postln;
 			paramProxy[key] = controlSpecs[key].default;
 		});
+		paramProxy[\vel].fadeTime = 0;
 
-		"set controls values".postln; 
+		// "set controls values".postln; 
 	}
 
 	setFadeTime { arg time;
@@ -127,9 +124,26 @@ Drum_SynthSocket {
 
 	trig {
 		synthProxy[\env].set(\t_trig, 1);
+		synthProxy[\drum].set(\t_trig, 1);
 	}
 
 	setParam { arg key, value;
+		paramProxy[key] = value;
+	}
+
+	randomizeParam { arg key;
+		// key.class.postln;
+		// controlSpecs.keys.asArray[0].class.postln;
+		var value = controlSpecs[key].map(1.0.rand);
+		// ("new random " ++ key ++ " value: "++ value).postln;
+		paramProxy[key] = value;
+	}
+
+	mapParam { arg key, normalized;
+		var value; 
+		// ("new " ++ key ++ " input value for mapping: "++ value).postln;
+		value = controlSpecs[key].map(normalized);
+		// ("new " ++ key ++ " value: "++ value).postln;
 		paramProxy[key] = value;
 	}
 
@@ -174,13 +188,13 @@ Drum_SynthSocket {
 
 			"mapping control keys".postln;
 			controlSpecs.keys.do({ arg key;
-				("mapping control key "++key).postln;
+				// ("mapping control key "++key).postln;
 				synthProxy[\drum].map(key, paramProxy[key]);
 			});
 
 			"mapping env params".postln;
 			envParams.do({ arg param;
-				("mapping env param"++param).postln;
+				// ("mapping env param"++param).postln;
 				synthProxy[\env].map(param, paramProxy[param]);
 			});
 
