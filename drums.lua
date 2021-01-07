@@ -45,16 +45,20 @@ function init()
   graphics_clock_id = clock.run(graphics_loop)
   
 -- this is pretty silly. probably attach to some menu thing or something
-  engine.pick_synth(0, "ez")
-  -- engine.pick_synth(0, "sinfb-kick")
+--   engine.pick_synth(0, "ez")
+--   engine.pick_synth(0, "sinfb-kick")
+  engine.pick_synth(0, "trig-test")
+--   engine.map_param(0, "vel", (1 + math.random()) / 2)
 end
 
 
 
 function do_drum_thing()
 -- this is also pretty silly. probably attach to some sequncer or something
+  engine.map_param(0, "pan", math.random())
+  engine.map_param(0, "vel", (1 + math.random()) / 2)
   engine.trigger(0)
-  print("do drum thing")
+--   print("do drum thing")
 end
 
 function increment_measure()
