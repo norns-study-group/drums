@@ -36,6 +36,14 @@ function init()
     division = 0.40,
     callback = do_pewpew
   }
+  
+  heavy_metal = lattice:new_pattern{
+      division = 0.2,
+      callback = function ()
+          engine.map_param(5, "decay", math.random())
+          engine.trigger(5)
+      end
+  }
 
   lattice:start()
 
@@ -62,6 +70,8 @@ function init()
 
   engine.pick_synth(3, "ez")
   engine.pick_synth(4, "ez")
+  
+  engine.pick_synth(5, "metallic")
   
   engine.add_forward(3, 2)
   engine.add_forward(4, 2)
