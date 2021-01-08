@@ -25,6 +25,9 @@ Drum_SynthSocket {
 	var controlSpecs;        // Set of control names
 	var <envParams;
 
+	var <ready;
+	var <voiceSet;
+
 	var baseControls;
 
 	var synthProxy;
@@ -36,12 +39,17 @@ Drum_SynthSocket {
 	*new {
 		arg server,      // instance of Server
 		out;             // output bus index
+		// "SUPER THANKS FOR ASKING".postln;
 		^super.new.init(server, out);
 	}
 
 	init {
 		arg s, out;
+		// "CONSTRUCTIN THINGS".postln;
 		server = s;
+
+		ready = false;
+		voiceSet = false;
 
 		synthProxy = ProxySpace.new;
 		synthProxy.fadeTime = fadeTime;
@@ -73,9 +81,12 @@ Drum_SynthSocket {
 
 		// "setting up pan synth".postln;
 		synthProxy[\pan] = {
-			Pan2.ar(synthProxy[\drum], paramProxy[\pan]);
+			Pan2.ar(synthProxy[\drum].ar(1), paramProxy[\pan].kr(1));
 		};
-		synthProxy[\pan].play(out);
+		fork {
+			server.sync;
+			synthProxy[\pan].play(out);
+		};
 
 		// "setting up controls ".postln;
 		controlSpecs = baseControls;
@@ -85,7 +96,8 @@ Drum_SynthSocket {
 	}
 
 	mapStuff {
-		Routine {
+		fork {
+			// "in mapStuff. syncing with server. now to map.".postln;
 			server.sync;
 			// "in mapStuff. synced with server. now to map.".postln;
 
@@ -103,7 +115,9 @@ Drum_SynthSocket {
 			});
 			// "mapped env controls".postln;
 			// "mapped stuff.".postln;
-		}.play;
+
+			ready = true;
+		};
 	}
 
 	setupControls {
@@ -115,7 +129,12 @@ Drum_SynthSocket {
 			// ("setting "++key++" to "++controlSpecs[key].default).postln;
 			paramProxy[key] = controlSpecs[key].default;
 		});
-		paramProxy[\vel].fadeTime = 0;
+		fork {
+			// "syncing before setting velocity fade time".postln; 
+			server.sync;
+			// "setting velocity fade time to 0".postln; 
+			paramProxy[\vel].fadeTime = 0;
+		}
 
 		// "set controls values".postln; 
 	}
@@ -125,12 +144,19 @@ Drum_SynthSocket {
 	}
 
 	trig {
+		// "triggering".postln;
 		synthProxy[\env].set(\t_trig, 1);
 		synthProxy[\drum].set(\t_trig, 1);
 	}
 
 	setParam { arg key, value;
 		paramProxy[key] = value;
+	}
+
+	getParam { arg key;
+		var value = paramProxy[key].getKeysValues()[0][1];
+		// ("getParam returning " ++ key ++ " = " ++ value).postln;
+		^value;
 	}
 
 	randomizeParam { arg key;
@@ -170,10 +196,11 @@ Drum_SynthSocket {
 
 	// performFade { arg newFunction, args;
 	setSource { arg newDrum, args;
-		"performing fade".postln;
-		newDrum.postln;
+		voiceSet = false;
+		// "performing fade".postln;
+		// newDrum.postln;
 
-		"performFade calling setupControls";
+		// "performFade calling setupControls";
 		controlSpecs = baseControls++newDrum[\controls]; // WAS an array, NOW an event
 		this.setupControls;
 
@@ -181,31 +208,28 @@ Drum_SynthSocket {
 		// not the most robust solution if fade times are extremely short,
 		// but much simpler than synchronizing with events from the server.
 		Routine {
-			server.sync;
-			
 			synthProxy[\drum] = newDrum[\synth];
 
-			"syncing".postln;
+			// "syncing".postln;
 			server.sync;
 
-			"mapping control keys".postln;
+			// "mapping control keys".postln;
 			controlSpecs.keys.do({ arg key;
 				// ("mapping control key "++key).postln;
 				synthProxy[\drum].map(key, paramProxy[key]);
 			});
 
-			"mapping env params".postln;
+			// "mapping env params".postln;
 			envParams.do({ arg param;
 				// ("mapping env param"++param).postln;
 				synthProxy[\env].map(param, paramProxy[param]);
 			});
 
-			"donemapping env params".postln;
+			// "donemapping env params".postln;
 			synthProxy[\drum].map(\env, synthProxy[\env]);
 
 			if (args.isNil, { args = () });
 
-			"setting params to incoming args".postln;
 			controlSpecs.keys.do({ arg key;
 				if (args.keys.includes(key), {
 					paramProxy[key] = args[key];
@@ -214,7 +238,9 @@ Drum_SynthSocket {
 					});
 				});
 			});
-			"done setting params".postln;
+			server.sync;
+			voiceSet = true;
+			// "done setting params".postln;
 		}.play;
 	}
 }

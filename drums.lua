@@ -29,7 +29,14 @@ function init()
       increment_measure()
       do_drum_thing()
     end
+}
+
+  pew = 3
+  pewpew = lattice:new_pattern{
+    division = 0.40,
+    callback = do_pewpew
   }
+
   lattice:start()
 
   tracks = {}
@@ -52,6 +59,12 @@ function init()
   engine.pick_synth(0, "whip-snare")
   engine.pick_synth(1, "sinfb-kick")
   engine.pick_synth(2, "noisehat")
+
+  engine.pick_synth(3, "ez")
+  engine.pick_synth(4, "ez")
+  
+  engine.add_forward(3, 2)
+  engine.add_forward(4, 2)
 end
 
 
@@ -83,9 +96,26 @@ function do_drum_thing()
         -- engine.pick_synth(0, "sinfb-kick")
       end
   end
-
+  
   -- engine.trigger(0)
 --   print("do drum thing")
+end
+
+function do_pewpew()
+    print("PEW" .. pew)
+    engine.set_param(pew, "hz", 
+      (pew == 3 and 220 or 330) + math.random() * 3)
+    engine.set_param(pew, "pan", pew == 3 and -1 or 1)
+
+    engine.map_param(pew, "slap", math.random() / 5)
+  
+    engine.trigger(pew)
+    pew = 7 - pew
+    if math.random() < 0.2 then
+        local new_div = math.random() / 2 + 0.1
+        print("WATCH OUT we got a new pewpew " .. new_div)
+        pewpew.division = new_div
+    end
 end
 
 function increment_measure()
