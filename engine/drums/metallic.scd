@@ -11,7 +11,7 @@
 		538.75 + hz,
 		811.16 + hz
 	], mul:0.15);
-	sig = BPF.ar(sig,TRand.kr(100, 10000, env));
+	sig = BPF.ar(sig,TRand.kr(50, 8000, env));
 	sig = Splay.ar(sig) * env;
 	},
 	controls: (
