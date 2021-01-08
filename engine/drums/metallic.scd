@@ -10,7 +10,7 @@
 		518.19 + hz,
 		538.75 + hz,
 		811.16 + hz
-	], mul:0.15);
+	], mul:0.23);
 	sig = BPF.ar(sig,TRand.kr(50, 8000, env));
 	sig = Splay.ar(sig) * env;
 	},
