@@ -42,6 +42,7 @@ engine.load("Drums", no_really_init)
       division = 0.2,
       callback = function ()
           engine.map_param(5, "decay", math.random())
+          engine.map_param(pew, "dewey", 0.8 + 0.15 * math.random())
           engine.trigger(5)
       end
   }
@@ -104,7 +105,9 @@ function do_drum_thing()
 
         engine.map_param(0, "decay", 0.05)
         engine.map_param(0, "heft", util.linlin(0,1,0.8,2,math.random()))
-        engine.map_param(0, "vel", math.random() * 0.4)
+        engine.map_param(0, "vel", 1)
+        engine.map_param(0, "dewey", 0.2 * math.random())
+        engine.map_param(0, "system", 0.6 * math.random())
 
         engine.trigger(0)
         -- engine.pick_synth(0, "sinfb-kick")
@@ -116,20 +119,22 @@ function do_drum_thing()
 end
 
 function do_pewpew()
-      print("PEW" .. pew)
-      engine.set_param(pew, "hz", 
-        (pew == 3 and 220 or 330) + math.random() * 3)
-      engine.set_param(pew, "pan", pew == 3 and -1 or 1)
-  
-      engine.map_param(pew, "slap", math.random() / 5)
+    print("PEW" .. pew)
+    engine.set_param(pew, "hz", 
+    (pew == 3 and 220 or 330) + math.random() * 3)
+    engine.set_param(pew, "pan", pew == 3 and -1 or 1)
     
-      engine.trigger(pew)
-      pew = 7 - pew
-      if math.random() < 0.2 then
-          local new_div = math.random() / 2 + 0.1
-          print("WATCH OUT we got a new pewpew " .. new_div)
-          pewpew.division = new_div
-      end
+    engine.map_param(pew, "dewey", 0.7 + 0.25 * math.random())
+    
+    engine.map_param(pew, "slap", math.random() / 5)
+    
+    engine.trigger(pew)
+    pew = 7 - pew
+    if math.random() < 0.2 then
+      local new_div = math.random() / 2 + 0.1
+      print("WATCH OUT we got a new pewpew " .. new_div)
+      pewpew.division = new_div
+    end
 end
 
 function increment_measure()

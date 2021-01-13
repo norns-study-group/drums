@@ -74,7 +74,7 @@ Drum_SynthSocket {
 		// paramProxy.fadeTime = controlLagTime;
 
 		envParams = [\attack, \decay, \curve];
-		panParams = [\pan];
+		panParams = [\pan, \dewey, \system];
 
 		baseControls = (
 			pan: ControlSpec(-1.0, 1.0, \lin, 0, 0, "position"),
@@ -85,6 +85,8 @@ Drum_SynthSocket {
 			vel: ControlSpec(0, 1.0, \lin, 0, 1.0, "velocitudes"),
 			slap: ControlSpec(0, 1.0, \lin, 0, 1.0, "slap"),
 			heft: ControlSpec(0, 1.0, \lin, 0, 1.0, "heft"),
+			dewey: ControlSpec(0.01, 48000.0, \lin, 0, 48000.0, "huey lewis"),
+			system: ControlSpec(1.0, 24.0, \lin, 0, 24.0, "bit rot"),
 		);
 
 		controlBuses = Dictionary.new(baseControls.size);
@@ -118,11 +120,11 @@ Drum_SynthSocket {
 		"setting up pan synth".postln;
 		// synthProxy[\pan] = 
 		pan = 
-		{ arg inBus, pan=0;
+		{ arg inBus, pan=0, dewey=48000, system=24;
 			// Pan2.ar(synthProxy[\drum].ar(1), paramProxy[\pan].kr(1));
 			// Pan2.ar(\in.ar(1), paramProxy[\pan].kr(1));
 			// insert more processors here
-			Pan2.ar(In.ar(inBus), pan);
+			Pan2.ar(Decimator.ar(In.ar(inBus), dewey, system), pan);
 		}.play(outbus: out, args: [\inBus, drumBus]);
 		fork {
 			// server.sync;
