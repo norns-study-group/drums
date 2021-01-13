@@ -26,8 +26,8 @@ Drums {
 		this.scanForNewDrums(baseDrumPath);
 
 		"creating sockets".postln;
-		socket = 8.collect{ 
-			Drum_SynthSocket.new(server, 0) 
+		socket = 8.collect{ arg index; 
+			Drum_SynthSocket.new(server, 0, index) 
 		};
 		"created sockets".postln;
 	}
@@ -73,7 +73,7 @@ Drums {
 		fork {
 			("start " ++ index).postln;
 			while { socket[index].ready.not } {
-				("drum #"++index++" not ready yet. waiting to set voice to "++name).postln;
+				// ("drum #"++index++" not ready yet. waiting to set voice to "++name).postln;
 				0.2.wait;
 			};
 			if (drums.keys.includes(name), {
@@ -93,10 +93,16 @@ Drums {
 	setParam { arg index, param, value;
 		fork {
 			// ("set index " ++ index ++ " param " ++ param).postln;
-			while { socket[index].ready.not || socket[index].voiceSet.not } {
-				("drum #"++index++" not ready yet. waiting to set param "++param++"to "++value).postln;
-				1.wait;
-			};
+			if (socket[index].ready.not || socket[index].voiceSet.not , {
+				while { socket[index].ready.not || socket[index].voiceSet.not } {
+					// ("drum #"++index++" not ready yet. waiting to set param "++param++" to "++value).postln;
+					1.wait;
+				};
+				if ((index > 1) && (index < 6), {
+					("FINALLY drum #" ++ index ++ " is ready to set " ++ param ++ "to " ++ value ++ "!").postln;
+					// socket[index].dump;
+				})
+			});
 			// ("setting drum #"++index++" param "++param++"to "++value).postln;
 			socket[index].setParam(param, value);
 		};
@@ -113,7 +119,7 @@ Drums {
 		// ("map index " ++ index ++ " param " ++ param).postln;
 		fork {
 			while { socket[index].ready.not || socket[index].voiceSet.not } {
-				("drum #"++index++" not ready yet. waiting to set param "++param++"to "++value).postln;
+				// ("drum #"++index++" not ready yet. waiting to set param "++param++" to "++value).postln;
 				1.wait;
 			};
 			// ("mapping drum #"++index++" param "++param++" value " ++ value ++ "to range").postln;
@@ -140,7 +146,7 @@ Drums {
 Engine_Drums : CroneEngine {
 	classvar luaOscPort = 10111;
 
-	var drums; // a Drums
+	var <drums; // a Drums
 	var <forwards;
 
 	*new { arg context, doneCallback;
@@ -211,7 +217,7 @@ Engine_Drums : CroneEngine {
 					drums.socket[findex].trig;
 				}) 
 			}, { 
-				("hang on, drum #"++index++" is not ready").postln;
+				// ("hang on, drum #"++index++" is not ready").postln;
 			});
 		});
 

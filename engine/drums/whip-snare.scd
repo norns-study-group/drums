@@ -7,9 +7,9 @@
 
         env = EnvGen.kr(Env.perc(attack, decay, vel, curve), t_trig);
 
-        env2 = EnvGen.kr(Env.perc(attack, decay * heft, vel, curve), t_trig);
+        env2 = EnvGen.kr(Env.perc(attack, decay * heft.max(1), vel, curve), t_trig);
         
-        env3 = EnvGen.kr(Env.new([0, hz*slap, hz], [attack * slap, decay * slap.reciprocal]), t_trig);
+        env3 = EnvGen.kr(Env.new([0, hz*slap, hz], [attack * slap, decay * slap.reciprocal.max(1)]), t_trig);
 
         snd1 = SinOsc.ar(freq: env3, mul: env);
 
@@ -21,7 +21,7 @@
 
         sum = snd1 + snd2;
         sum = HPF.ar(sum, 150);
-        LPF.ar(sum, 4000)
+        LPF.ar(sum, 4000) * vel
 	},
 	controls: (
 		attack: ControlSpec(0.0, 0.1, \exp, 0, 0.01, "seconds"),
