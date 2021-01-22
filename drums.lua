@@ -9,7 +9,6 @@ Track = include("lib/track")
 Lattice = include("lib/lattice")
 GridKeys = include("lib/gridkeys")
 
-engine.name = "Drums"
 
 local TRACK_COUNT = 7
 
@@ -17,7 +16,9 @@ local g = grid.connect()
 local gridKeys = {}
 local grid_dirty = false
 
+
 function init()
+engine.load("Drums", no_really_init)
   graphics.init()
   screen_dirty = true
   selected_track = 1
@@ -41,11 +42,10 @@ function init()
       division = 0.2,
       callback = function ()
           engine.map_param(5, "decay", math.random())
+          engine.map_param(pew, "dewey", 0.8 + 0.15 * math.random())
           engine.trigger(5)
       end
   }
-
-  lattice:start()
 
   tracks = {}
   for i = 1, TRACK_COUNT do
@@ -58,12 +58,14 @@ function init()
   init_gridKeys()
 
   graphics_clock_id = clock.run(graphics_loop)
-  
--- this is pretty silly. probably attach to some menu thing or something
-  -- engine.pick_synth(0, "ez")
---   engine.pick_synth(0, "sinfb-kick")
-  -- engine.pick_synth(0, "trig-test")
---   engine.map_param(0, "vel", (1 + math.random()) / 2)
+end
+
+function no_really_init()
+  setup_drums()
+  lattice:start()
+end
+
+function setup_drums()
   engine.pick_synth(0, "whip-snare")
   engine.pick_synth(1, "sinfb-kick")
   engine.pick_synth(2, "noisehat")
@@ -87,20 +89,25 @@ function do_drum_thing()
       if math.random() > 0.6 then
         engine.map_param(1, "pan", util.linlin(0,1,-1,1,math.random()))
         engine.map_param(1, "decay", util.linlin(0,1,0.3,1.0,math.random()))
-        engine.map_param(1, "vel", (1 + math.random()) / 2)
+        engine.map_param(1, "vel", math.random() * 0.6)
 
         engine.trigger(1)
         -- engine.pick_synth(0, "whip-snare")
       elseif math.random() > 0.2 then
+        engine.map_param(2, "vel", (1 + math.random()) / 4)
+        engine.map_param(2, "attack", math.random() * 0.05)
+        engine.map_param(2, "decay", math.random() * 0.5)
         engine.trigger(2)
       else
         engine.map_param(0, "pan", util.linlin(0,1,-1,1,math.random()))
       -- engine.map_param(0, "slap", util.linlin(0,1,0.5,4,math.random()))
       -- engine.map_param(0, "slap", 5)
 
-        engine.map_param(0, "decay", util.linlin(0,1,0.05,0.3,math.random()))
+        engine.map_param(0, "decay", 0.05)
         engine.map_param(0, "heft", util.linlin(0,1,0.8,2,math.random()))
-        engine.map_param(0, "vel", (1 + math.random()) / 2)
+        engine.map_param(0, "vel", 1)
+        engine.map_param(0, "dewey", 0.2 * math.random())
+        engine.map_param(0, "system", 0.6 * math.random())
 
         engine.trigger(0)
         -- engine.pick_synth(0, "sinfb-kick")
@@ -114,17 +121,19 @@ end
 function do_pewpew()
     print("PEW" .. pew)
     engine.set_param(pew, "hz", 
-      (pew == 3 and 220 or 330) + math.random() * 3)
+    (pew == 3 and 220 or 330) + math.random() * 3)
     engine.set_param(pew, "pan", pew == 3 and -1 or 1)
-
+    
+    engine.map_param(pew, "dewey", 0.7 + 0.25 * math.random())
+    
     engine.map_param(pew, "slap", math.random() / 5)
-  
+    
     engine.trigger(pew)
     pew = 7 - pew
     if math.random() < 0.2 then
-        local new_div = math.random() / 2 + 0.1
-        print("WATCH OUT we got a new pewpew " .. new_div)
-        pewpew.division = new_div
+      local new_div = math.random() / 2 + 0.1
+      print("WATCH OUT we got a new pewpew " .. new_div)
+      pewpew.division = new_div
     end
 end
 
