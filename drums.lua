@@ -1,12 +1,13 @@
 -- k1: exit   e1: ???
 --
---         e2: y     e3: x
---    k2: change   k3: ???
+--         e2: ???     e3: ???
 --
+--       k2: ???   k3: ???
+--
+Lattice = require("lattice")
 fn = include("lib/functions")
 graphics = include("lib/graphics")
 Track = include("lib/track")
-Lattice = include("lib/lattice")
 GridKeys = include("lib/gridkeys")
 
 
@@ -15,18 +16,18 @@ local TRACK_COUNT = 7
 local g = grid.connect()
 local gridKeys = {}
 local grid_dirty = false
+local lattice = Lattice:new()
 
 
 function init()
-engine.load("Drums", no_really_init)
+  engine.load("Drums", no_really_init)
   graphics.init()
   screen_dirty = true
   selected_track = 1
   measure = 0
-  lattice = Lattice:new()
   whole_notes = lattice:new_pattern{
     division = 0.05,
-    callback = function(t)
+    action = function(t)
       increment_measure()
       do_drum_thing()
     end
@@ -35,12 +36,12 @@ engine.load("Drums", no_really_init)
   pew = 3
   pewpew = lattice:new_pattern{
     division = 0.40,
-    callback = do_pewpew
+    action = do_pewpew
   }
   
   heavy_metal = lattice:new_pattern{
       division = 0.2,
-      callback = function ()
+      action = function (t)
           engine.map_param(5, "decay", math.random())
           engine.map_param(pew, "dewey", 0.8 + 0.15 * math.random())
           engine.trigger(5)
@@ -145,19 +146,16 @@ end
 function redraw()
   graphics:setup()
   graphics:draw_title()
-  graphics:draw_tracks()
   graphics:teardown()
 end
 
 function graphics_loop()
   while true do
     clock.sleep(1/15)
-    graphics:modulate()
     if screen_dirty then
       redraw()
       screen_dirty = false
     end
-
     -- animates gridKeys and redraws grid if dirty
     if gridKeys:animate() or grid_dirty then
       grid_redraw()
@@ -168,25 +166,26 @@ end
 function key(k, z)
   if z == 0 then return end
   if k == 2 then
-    fn.get_selected_track():change()
+    print(k)
   elseif k == 3 then
-
+    print(k)
   end
   screen_dirty = true
 end
 
 function enc(e, d)
-  if e == 2 then
-    fn.select_track(d)
+  if e == 1 then
+    print(e, d)
+  elseif e == 2 then
+    print(e, d)
   elseif e == 3 then
-    fn.select_track_index(d)
+    print(e, d)
   end
   screen_dirty = true
 end
 
 function cleanup()
   lattice:destroy()
-  clock.cancel(graphics_clock_id)
 end
 
 -- GRID --
